@@ -1,0 +1,200 @@
+---
+title: "Class 7: Clustering and PCA"
+author: "Yipeng Li"
+format: pdf
+editor: visual
+---
+
+# Clustering
+
+First let's make up some data to cluster so we can get a feel for these methods and how to work with them.
+
+We can use the `rnorm()` function to get random numbers from a normal distribution around a given `mean`.
+```{r}
+hist(rnorm(5000, mean=3))
+```
+
+Let's get 30 points with a mean of 3.
+
+```{r}
+tmp <- c(rnorm(30, mean=3), rnorm(30, mean=-3))
+tmp
+```
+put two of these together:
+```{r}
+x <- cbind(x=tmp, y=rev(tmp))
+x
+plot(x)
+```
+
+## k-means clustering.
+
+Very popular clusterring method that we can use with the `kmeans()` function in base R.
+
+```{r}
+km <- kmeans(x, centers=2)
+km
+```
+> Q. Cluster exercise
+
+-cluster size
+```{r}
+km$size
+```
+
+-cluster assignment
+```{r}
+km$cluster
+```
+
+- cluster center
+```{r}
+km$centers
+```
+> Q. plot x colored by the means cluster assignment and add cluster centers as blue points
+
+```{r}
+plot(x, col=km$cluster)
+points(km$centers, col="blue", pch=15, cex=3)
+```
+
+> Q. let's cluster into 3 groups for same `x` data and make a plot.
+
+```{r}
+km <- kmeans(x, centers=3)
+km
+plot(x, col=km$cluster)
+```
+
+# Hierarchical Clustering
+
+We can use the `hclust()` function for hierarchical Clustering.
+Unlike `kmeans()`, where we could just pass in our data as input, we need to give `hclust()` a "distance matrix"
+
+We will use the `dist()` function to start with
+
+```{r}
+d <- dist(x)
+d
+hc <- hclust(d)
+hc
+```
+
+```{r}
+plot(hc)
+```
+
+I can now "cut" my tree with the `cutres()` to yield a cluster membership vector
+
+```{r}
+grps <- cutree(hc, h=8)
+grps
+```
+
+You can also tell `cutree()` to cut where it yields "k" groups.
+
+```{r}
+cutree(hc, k=2)
+```
+
+```{r}
+plot(x, col=grps)
+```
+
+# Principal Component Analysis (PCA)
+
+1. PCA of UK food data
+Suppose that we are examining the following data, from the UK’s ‘Department for Environment, Food and Rural Affairs’ (DEFRA), showing the consumption in grams (per person, per week) of 17 different types of food-stuff measured and averaged in the four countries of the United Kingdom in 1997.
+```{r}
+url <- "https://tinyurl.com/UK-foods"
+x <- read.csv(url)
+```
+
+>Q1. How many rows and columns are in your new data frame named x? What R functions could you use to answer this questions?
+
+```{r}
+#rows
+nrow(x)
+#columns
+ncol(x)
+#both row and columns
+dim(x)
+```
+
+>Q2. Which approach to solving the ‘row-names problem’ mentioned above do you prefer and why? Is one approach more robust than another under certain circumstances?
+#Check my data
+
+```{r}
+View(x)
+```
+
+#To fix the wrong number of columns we can drop column x from the dataframe
+
+```{r}
+rownames(x) <- x[,1]
+x <- x[,-1]
+head(x)
+```
+
+#But everytime you run it, you will drop one of the column, so the better way is to read `row.names`.
+
+```{r}
+x <- read.csv(url, row.names=1)
+head(x)
+```
+
+##So use `row.names` during read.csv is better, because -1 will detele one column everytime you run it.
+Answer: x <- read.csv(url, row.names=1)
+
+>Q3: Changing what optional argument in the above barplot() function results in the following plot?
+
+```{r}
+barplot(as.matrix(x), beside=T, col=rainbow(nrow(x)))
+# To change it, simply change default the setting
+fix_plot <- barplot(as.matrix(x), beside=FALSE, col=rainbow(nrow(x)))
+fix_plot
+```
+
+>Q5: Generating all pairwise plots may help somewhat. Can you make sense of the following code and resulting figure? What does it mean if a given point lies on the diagonal for a given plot?
+
+```{r}
+pairs(x, col=rainbow(10), pch=16)
+```
+
+#the axies are changed, based on the plot format, the row gives the y-axis country and the column gives x-axis country. And England and wales are pretty similar, based on the points (points are aways from each other), we can see Scotland is less similar to England and Wales. And N.Ireland is even more different from England and Wales, and also different from Scotland.
+
+>Q6. What is the main differences between N. Ireland and the other countries of the UK in terms of this data-set?
+
+#N.Ireland is different from England, Wales, and Scotland. Based on the graph, the point is more far away from each other.
+```{r}
+x
+```
+# the N. Ireland have way less Alcoholic_drinks, other meat and lots more fresh potatoes.
+
+>Q7. Complete the code below to generate a plot of PC1 vs PC2. The second line adds text labels over the data points.
+
+The main PCA function in base R is called `prcomp()` it expects the transpose of our data
+```{r}
+pca <- prcomp(t(x))
+summary(pca)
+```
+
+```{r}
+# Plot PC1 vs PC2
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+text(pca$x[,1], pca$x[,2], labels=colnames(x))
+```
+
+>Q8. Customize your plot so that the colors of the country names match the colors in our UK and Ireland map and table at start of this document.
+
+```{r}
+#change the color of the dots
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500), col = c("orange", "red", "blue", "darkgreen"), pch=16)
+```
+
+```{r}
+#change color of the text
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+text(pca$x[,1], pca$x[,2], labels=colnames(x), col = c("orange", "red", "blue", "darkgreen"))
+```
+

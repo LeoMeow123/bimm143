@@ -1,0 +1,107 @@
+---
+title: "Class06"
+author: "Yipeng Li"
+format: pdf
+editor: visual
+---
+
+Example input vectors to start with
+```{r}
+student1 <- c(100, 100, 100, 100, 100, 100, 100, 90)
+student2 <- c(100, NA, 90, 90, 90, 90, 97, 80)
+student3 <- c(90, NA, NA, NA, NA, NA, NA, NA)
+```
+
+drop the lowest score
+```{r}
+student1 <- student1[-which.min(student1)]
+student1
+mean(student1)
+```
+
+change NA to 0
+```{r}
+#drop the NA from student2 and calculate the mean
+student2[is.na(student2)] <- 0
+student2
+mean(student2)
+
+#drop all the NA from student 3 and calculate the mean
+student3[is.na(student3)] <- 0
+student3
+mean(student3)
+```
+>Q1. Write a function grade() to determine an overall grade from a vector of student homework assignment scores dropping the lowest single score. If a student misses a homework (i.e. has an NA value) this can be used as a score to be potentially dropped. Your final function should be adquately explained with code comments and be able to work on an example class gradebook such as this one in CSV format: “https://tinyurl.com/gradeinput” [3pts]
+
+```{r}
+#my grade function
+grade <- function(student) {
+  student[is.na(student)] <- 0
+  student <- student[-which.min(student)]
+  return(mean(student))
+}
+```
+
+read the csv document
+```{r}
+data <- read.csv("https://tinyurl.com/gradeinput", row.names = 1)
+data
+```
+
+Apply my grade function
+```{r}
+students_grade <- apply(data, 1, grade)
+students_grade
+```
+
+>Q2. Using your grade() function and the supplied gradebook, Who is the top scoring student overall in the gradebook? [3pts]
+
+```{r}
+Top_student <- students_grade[which.max(students_grade)]
+Top_student
+```
+
+>Q3. From your analysis of the gradebook, which homework was toughest on students (i.e. obtained the lowest scores overall? [2pts]
+#The overall grade for HW1 to HW5
+
+Calculate the mean & sum for homework
+```{r}
+homework_mean <- apply(data, 2, mean, na.rm = TRUE)
+homework_mean
+homework_sum <- apply(data, 2, sum, na.rm = TRUE)
+homework_sum
+```
+
+So the lowest score
+
+```{r}
+homework_mean[which.min(homework_mean)]
+homework_sum[which.min(homework_sum)]
+```
+Based on the answer, HW2 and HW3 are not having a good score. HW3 have the lowest average, and HW2 have the lowest overall score.
+
+>Q4. Optional Extension: From your analysis of the gradebook, which homework was most predictive of overall score (i.e. highest correlation with average grade score)? [1pt]
+
+Modify the data to fit the requirement
+```{r}
+masked.gradebook <- data
+masked.gradebook[is.na(masked.gradebook)] <- 0
+masked.gradebook
+```
+Then calculate the correlation for hw1
+```{r}
+cor(students_grade, masked.gradebook$hw1)
+```
+
+Apply to all
+```{r}
+correlation <- apply(masked.gradebook, 2, cor, x=students_grade)
+correlation
+```
+
+The highest correlation is 
+```{r}
+correlation[which.max(correlation)]
+```
+
+>Q5. Make sure you save your Quarto document and can click the “Render” (or Rmark- down”Knit”) button to generate a PDF foramt report without errors. Finally, submit your PDF to gradescope. [1pt]
